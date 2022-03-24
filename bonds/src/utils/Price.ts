@@ -1,10 +1,10 @@
 import {
     KLIMA_BCT_PAIR, BCT_USDC_PAIR,
     KLIMA_MCO2_PAIR, KLIMA_ERC20_V1_CONTRACT
-} from './Constants'
+} from '../../../lib/utils/Constants'
 import { Address, BigDecimal, BigInt, log } from '@graphprotocol/graph-ts'
-import { UniswapV2Pair } from '../../generated/KlimaStakingV1/UniswapV2Pair';
-import { toDecimal } from './Decimals'
+import { UniswapV2Pair } from '../../generated/BCTBondV1/UniswapV2Pair'
+import { toDecimal } from '../../../lib/utils/Decimals'
 
 
 let BIG_DECIMAL_1E9 = BigDecimal.fromString('1e9')

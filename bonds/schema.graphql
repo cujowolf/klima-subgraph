@@ -3,7 +3,7 @@ type DailyBond @entity {
   timestamp: BigInt!
   token: String!
   payout: BigDecimal!
-  carbon: BigDecimal!
+  tokenValue: BigDecimal!
   carbonCustodied: BigDecimal!
 }
 
@@ -12,7 +12,6 @@ type Bonder @entity {
   deposits: [Deposit!] @derivedFrom(field: "bonder")
   redeems: [Redemption!] @derivedFrom(field: "bonder")
   totalKlimaBonded: BigDecimal!
-  totalCarbonBonded: BigDecimal!
   totalCarbonCustodied: BigDecimal!
 }
 
@@ -25,8 +24,7 @@ type Deposit @entity {
   bondPrice: BigDecimal!
   marketPrice: BigDecimal!
   discount: BigDecimal!
-  tokenValue: BigDecimal!
-  carbon: BigDecimal!
+  tokenValue: BigDecimal!                                                                                     
   carbonCustodied: BigDecimal!
   timestamp: BigInt!
 }
@@ -35,7 +33,9 @@ type Redemption @entity {
   id: ID!
   transaction: Transaction
   bonder: Bonder!
-  token: String!
+  token: String
+  payout: BigDecimal!
+  payoutRemaining: BigDecimal!
   timestamp: BigInt!
 }
 

@@ -19,7 +19,7 @@ export class DailyBond extends Entity {
     this.set("timestamp", Value.fromBigInt(BigInt.zero()));
     this.set("token", Value.fromString(""));
     this.set("payout", Value.fromBigDecimal(BigDecimal.zero()));
-    this.set("carbon", Value.fromBigDecimal(BigDecimal.zero()));
+    this.set("tokenValue", Value.fromBigDecimal(BigDecimal.zero()));
     this.set("carbonCustodied", Value.fromBigDecimal(BigDecimal.zero()));
   }
 
@@ -75,13 +75,13 @@ export class DailyBond extends Entity {
     this.set("payout", Value.fromBigDecimal(value));
   }
 
-  get carbon(): BigDecimal {
-    let value = this.get("carbon");
+  get tokenValue(): BigDecimal {
+    let value = this.get("tokenValue");
     return value!.toBigDecimal();
   }
 
-  set carbon(value: BigDecimal) {
-    this.set("carbon", Value.fromBigDecimal(value));
+  set tokenValue(value: BigDecimal) {
+    this.set("tokenValue", Value.fromBigDecimal(value));
   }
 
   get carbonCustodied(): BigDecimal {
@@ -100,7 +100,6 @@ export class Bonder extends Entity {
     this.set("id", Value.fromString(id));
 
     this.set("totalKlimaBonded", Value.fromBigDecimal(BigDecimal.zero()));
-    this.set("totalCarbonBonded", Value.fromBigDecimal(BigDecimal.zero()));
     this.set("totalCarbonCustodied", Value.fromBigDecimal(BigDecimal.zero()));
   }
 
@@ -172,15 +171,6 @@ export class Bonder extends Entity {
     this.set("totalKlimaBonded", Value.fromBigDecimal(value));
   }
 
-  get totalCarbonBonded(): BigDecimal {
-    let value = this.get("totalCarbonBonded");
-    return value!.toBigDecimal();
-  }
-
-  set totalCarbonBonded(value: BigDecimal) {
-    this.set("totalCarbonBonded", Value.fromBigDecimal(value));
-  }
-
   get totalCarbonCustodied(): BigDecimal {
     let value = this.get("totalCarbonCustodied");
     return value!.toBigDecimal();
@@ -204,7 +194,6 @@ export class Deposit extends Entity {
     this.set("marketPrice", Value.fromBigDecimal(BigDecimal.zero()));
     this.set("discount", Value.fromBigDecimal(BigDecimal.zero()));
     this.set("tokenValue", Value.fromBigDecimal(BigDecimal.zero()));
-    this.set("carbon", Value.fromBigDecimal(BigDecimal.zero()));
     this.set("carbonCustodied", Value.fromBigDecimal(BigDecimal.zero()));
     this.set("timestamp", Value.fromBigInt(BigInt.zero()));
   }
@@ -306,15 +295,6 @@ export class Deposit extends Entity {
     this.set("tokenValue", Value.fromBigDecimal(value));
   }
 
-  get carbon(): BigDecimal {
-    let value = this.get("carbon");
-    return value!.toBigDecimal();
-  }
-
-  set carbon(value: BigDecimal) {
-    this.set("carbon", Value.fromBigDecimal(value));
-  }
-
   get carbonCustodied(): BigDecimal {
     let value = this.get("carbonCustodied");
     return value!.toBigDecimal();
@@ -340,7 +320,8 @@ export class Redemption extends Entity {
     this.set("id", Value.fromString(id));
 
     this.set("bonder", Value.fromString(""));
-    this.set("token", Value.fromString(""));
+    this.set("payout", Value.fromBigDecimal(BigDecimal.zero()));
+    this.set("payoutRemaining", Value.fromBigDecimal(BigDecimal.zero()));
     this.set("timestamp", Value.fromBigInt(BigInt.zero()));
   }
 
@@ -395,13 +376,39 @@ export class Redemption extends Entity {
     this.set("bonder", Value.fromString(value));
   }
 
-  get token(): string {
+  get token(): string | null {
     let value = this.get("token");
-    return value!.toString();
+    if (!value || value.kind == ValueKind.NULL) {
+      return null;
+    } else {
+      return value.toString();
+    }
   }
 
-  set token(value: string) {
-    this.set("token", Value.fromString(value));
+  set token(value: string | null) {
+    if (!value) {
+      this.unset("token");
+    } else {
+      this.set("token", Value.fromString(<string>value));
+    }
+  }
+
+  get payout(): BigDecimal {
+    let value = this.get("payout");
+    return value!.toBigDecimal();
+  }
+
+  set payout(value: BigDecimal) {
+    this.set("payout", Value.fromBigDecimal(value));
+  }
+
+  get payoutRemaining(): BigDecimal {
+    let value = this.get("payoutRemaining");
+    return value!.toBigDecimal();
+  }
+
+  set payoutRemaining(value: BigDecimal) {
+    this.set("payoutRemaining", Value.fromBigDecimal(value));
   }
 
   get timestamp(): BigInt {

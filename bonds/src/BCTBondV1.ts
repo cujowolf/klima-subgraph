@@ -1,11 +1,8 @@
-import { BigDecimal } from '@graphprotocol/graph-ts'
-
 import { BondCreated, BondRedeemed } from '../generated/BCTBondV1/BondV1'
 import { Deposit } from '../generated/schema'
 import { loadOrCreateTransaction } from "./utils/Transactions"
 import { toDecimal } from "../../lib/utils/Decimals"
 import { BCT_BOND_TOKEN } from '../../lib/utils/Constants'
-import { loadOrCreateToken } from './utils/Tokens'
 import { loadOrCreateRedemption } from './utils/Redemption'
 import { createDailyBondRecord } from './utils/DailyBond'
 import { getKLIMABCTRate } from './utils/Price'
@@ -25,24 +22,28 @@ export function handleDeposit(event: BondCreated): void {
     deposit.marketPrice = getKLIMABCTRate()
     deposit.discount = (deposit.marketPrice.minus(deposit.bondPrice)).div(deposit.marketPrice)
     deposit.tokenValue = toDecimal(event.params.deposit, 18)
-    deposit.carbon = deposit.tokenValue
     deposit.carbonCustodied = deposit.tokenValue
     deposit.timestamp = transaction.timestamp;
     deposit.save()
 
-    createDailyBondRecord(deposit.timestamp, token, deposit.payout, deposit.value)
-    updateKlimateBalance(klimate, transaction)
+    bonder.totalCarbonCustodied = bonder.totalCarbonCustodied.plus(deposit.carbonCustodied)
+    bonder.totalKlimaBonded = bonder.totalKlimaBonded.plus(deposit.payout)
+    bonder.save()
+
+
+    createDailyBondRecord(deposit.timestamp, deposit.token, deposit.payout, deposit.tokenValue, deposit.carbonCustodied)
 }
 
 export function handleRedeem(event: BondRedeemed): void {
-    let klimate = loadOrCreateKlimate(event.params.recipient)
+    let bonder = loadOrCreateBonder(event.params.recipient)
     let transaction = loadOrCreateTransaction(event.transaction, event.block)
 
-    let redemption = loadOrCreateRedemption(event.transaction)
+    let redemption = loadOrCreateRedemption(event.transaction, transaction.timestamp)
     redemption.transaction = transaction.id
-    redemption.klimate = klimate.id
-    redemption.token = loadOrCreateToken(BCT_BOND_TOKEN).id;
+    redemption.bonder = bonder.id
+    redemption.token = BCT_BOND_TOKEN
+    redemption.payout = toDecimal(event.params.payout, 9)
+    redemption.payoutRemaining = toDecimal(event.params.remaining, 9)
     redemption.timestamp = transaction.timestamp;
     redemption.save()
-    updateKlimateBalance(klimate, transaction)
 }

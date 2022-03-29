@@ -7,7 +7,6 @@ export function loadOrCreateBonder(addr: Address): Bonder {
     if (bonder == null) {
         bonder = new Bonder(addr.toHexString())
         bonder.totalKlimaBonded = BigDecimal.fromString('0')
-        bonder.totalCarbonBonded = BigDecimal.fromString('0')
         bonder.totalCarbonCustodied = BigDecimal.fromString('0')
         bonder.save()
     }

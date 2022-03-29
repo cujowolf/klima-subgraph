@@ -1,48 +1,48 @@
-import { BigDecimal } from '@graphprotocol/graph-ts'
-
-import { BondCreated, BondRedeemed } from '../generated/KLIMABCTBondV1/BondV1'
+import { BondCreated, BondRedeemed } from '../generated/BCTBondV1/BondV1'
 import { Deposit } from '../generated/schema'
 import { loadOrCreateTransaction } from "./utils/Transactions"
-import { loadOrCreateKlimate, updateKlimateBalance } from "./utils/Klimate"
-import { toDecimal } from "./utils/Decimals"
-import { KLIMABCT_LPBOND_TOKEN } from './utils/Constants'
-import { loadOrCreateToken } from './utils/Tokens'
+import { toDecimal } from "../../lib/utils/Decimals"
+import { KLIMABCT_LPBOND_TOKEN, KLIMA_BCT_PAIR } from '../../lib/utils/Constants'
 import { loadOrCreateRedemption } from './utils/Redemption'
 import { createDailyBondRecord } from './utils/DailyBond'
-import { getKLIMABCTRate } from './utils/Price'
+import { getDiscountedPairCO2, getKLIMABCTRate } from './utils/Price'
+import { loadOrCreateBonder } from './utils/Bonder'
 
 
 export function handleDeposit(event: BondCreated): void {
-    let klimate = loadOrCreateKlimate(event.transaction.from)
+    let bonder = loadOrCreateBonder(event.transaction.from)
     let transaction = loadOrCreateTransaction(event.transaction, event.block)
-    let token = loadOrCreateToken(KLIMABCT_LPBOND_TOKEN)
 
-    let value = toDecimal(event.params.deposit, 18)
-    let payout = toDecimal(event.params.payout, 9)
     let deposit = new Deposit(transaction.id)
+    deposit.token = KLIMABCT_LPBOND_TOKEN;
     deposit.transaction = transaction.id
-    deposit.klimate = klimate.id
-    deposit.payout = payout
-    deposit.value = value
+    deposit.bonder = bonder.id
+    deposit.payout = toDecimal(event.params.payout, 9)
     deposit.bondPrice = toDecimal(event.params.priceInUSD, 18)
-    deposit.discount = getKLIMABCTRate().div(deposit.bondPrice).minus(BigDecimal.fromString('1')).times(BigDecimal.fromString('100'))
-    deposit.token = token.id;
+    deposit.marketPrice = getKLIMABCTRate()
+    deposit.discount = (deposit.marketPrice.minus(deposit.bondPrice)).div(deposit.marketPrice)
+    deposit.tokenValue = toDecimal(event.params.deposit, 18)
+    deposit.carbonCustodied = getDiscountedPairCO2(event.params.deposit, KLIMA_BCT_PAIR)
     deposit.timestamp = transaction.timestamp;
     deposit.save()
 
-    createDailyBondRecord(deposit.timestamp, token, deposit.payout, deposit.value)
-    updateKlimateBalance(klimate, transaction)
+    bonder.totalCarbonCustodied = bonder.totalCarbonCustodied.plus(deposit.carbonCustodied)
+    bonder.totalKlimaBonded = bonder.totalKlimaBonded.plus(deposit.payout)
+    bonder.save()
+
+    createDailyBondRecord(deposit.timestamp, deposit.token, deposit.payout, deposit.tokenValue, deposit.carbonCustodied)
 }
 
 export function handleRedeem(event: BondRedeemed): void {
-    let klimate = loadOrCreateKlimate(event.params.recipient)
+    let bonder = loadOrCreateBonder(event.params.recipient)
     let transaction = loadOrCreateTransaction(event.transaction, event.block)
 
-    let redemption = loadOrCreateRedemption(event.transaction)
+    let redemption = loadOrCreateRedemption(event.transaction, transaction.timestamp)
     redemption.transaction = transaction.id
-    redemption.klimate = klimate.id
-    redemption.token = loadOrCreateToken(KLIMABCT_LPBOND_TOKEN).id;
+    redemption.bonder = bonder.id
+    redemption.token = KLIMABCT_LPBOND_TOKEN
+    redemption.payout = toDecimal(event.params.payout, 9)
+    redemption.payoutRemaining = toDecimal(event.params.remaining, 9)
     redemption.timestamp = transaction.timestamp;
     redemption.save()
-    updateKlimateBalance(klimate, transaction)
 }

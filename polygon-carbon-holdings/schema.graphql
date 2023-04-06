@@ -1,0 +1,50 @@
+type Token @entity {
+    "Ethereum contract address"
+    id: Bytes!
+
+    "Name of the token"
+    name: String!
+
+    "Symbol of the token"
+    symbol: String!
+
+    "Decimals of the token"
+    decimals: Int!
+
+    "Latest price in USD"
+    latestPriceUSD: BigDecimal!
+
+    "Latest price update timestamp"
+    latestPriceUSDUpdated: BigInt!
+
+    "Latest price in KLIMA"
+    latestPricePerKLIMA: BigDecimal!
+
+    "Latest price in KLIMAupdate timestamp"
+    latestPricePerKLIMAUpdated: BigInt!
+}
+
+type Account @entity {
+    "Ethereum address of the account"
+    id: Bytes!
+
+    ## Token Balance Activity ##
+    holdings: [Holding!]! @derivedFrom(field: "account")
+}
+
+type Holding @entity {
+    "{Account}-{Token}"
+    id: Bytes!
+
+    "Account this belongs to"
+    account: Account!
+
+    "Token being held"
+    token: Token!
+
+    "Amount currently held in native units"
+    amount: BigInt!
+
+    "Timestamp last updated"
+    lastUpdated: BigInt!
+}

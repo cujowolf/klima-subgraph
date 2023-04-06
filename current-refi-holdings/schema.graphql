@@ -1,0 +1,20 @@
+type Account @entity {
+  id: ID!
+  klimate: Boolean!
+  holdings: [Holding!]! @derivedFrom(field: "account")
+}
+
+type Holding @entity {
+  id: ID! 
+  account: Account!
+  token: Token!
+  tokenAmount: BigInt!
+  updatedAt: BigInt!
+}
+
+type Token @entity {
+  id: ID!
+  name: String!
+  symbol: String!
+  decimals: Int!
+}

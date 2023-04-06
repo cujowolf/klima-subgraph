@@ -52,10 +52,13 @@ function updateC3Call(tokenAddress: Address, carbonOffset: CarbonOffset): Carbon
     let carbonOffsetERC20 = C3ProjectToken.bind(tokenAddress)
 
     let attributes = carbonOffsetERC20.getProjectInfo()
-    let project = loadOrCreateCarbonProject(
-        attributes.registry == 'VCS' ? 'VERRA' : attributes.registry,
-        attributes.registry + '-' + attributes.project_id
-    )
+
+    // Map to enum values
+    let registry = ''
+    if (attributes.registry == 'VCS') registry = 'VERRA'
+    else if (attributes.registry == 'GS') registry = 'GOLD_STANDARD'
+
+    let project = loadOrCreateCarbonProject(registry, attributes.registry + '-' + attributes.project_id)
 
     carbonOffset.project = project.id
     let vintageParsed = BigInt.fromI64(Date.UTC(carbonOffsetERC20.getVintage().toI32(), 0) / 1000)
